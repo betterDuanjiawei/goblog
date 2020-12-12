@@ -89,4 +89,49 @@ Web 的响应与请求结构是类似的，响应分为三个部分：响应行�
 400~499：客户端的请求有错误，如：404 表示你请求的资源在 web 服务器中找不到，403 表示服务器拒绝客户端的访问，一般是权限不够。
 500~599：服务器端出现错误，最常用的是：500
 
+## http.ServeMux 优缺点
+* http.ServeMux 的局限性
+http.ServeMux 在 goblog 中使用，会遇到以下几个问题：
+
+不支持 URI 路径参数
+不支持请求方法过滤
+不支持路由命名
+* http.ServeMux 的优缺点
+优点
+标准库意味着随着 Go 打包安装，无需另行安装
+测试充分
+稳定、兼容性强
+简单，高效
+
+缺点
+缺少 Web 开发常见的特性
+在复杂的项目中使用，需要你写更多的代码
+开发效率和运行效率，永远是对立面。
+Go 标准库选择 运行效率 高于 开发效率
+事实上，标准库最大的优点是 Go 自带。
+
+
+## CURL
+* get 请求 curl http://localhost:3000/articles                              
+* post 请求 curl -X POST http://localhost:3000/articles
+
+## 为什么不选择 HttpRouter？
+* HttpRouter 是目前来讲速度最快的路由器，且被知名框架 Gin 所采用。
+不选择 HttpRouter 的原因是其功能略显单一，没有路由命名功能，不符合我们的要求。
+HttpRouter 和 Gin 比较适合在要求高性能，且路由功能要求相对简单的项目中，如 API 或微服务。在全栈的 Web 开发中，gorilla/mux 在性能上虽然有所不及，但是功能强大，比较实用
+
+## 安装 gorilla/mux
+```
+go env -w GOPROXY=https://goproxy.cn
+go mod init
+go get -u github.com/gorilla/mux
+```
+
+## gorilla/mux 的路由解析采用的是 精准匹配 规则，而 net/http 包使用的是 长度优先匹配 规则。
+* 精准匹配 指路由只会匹配准确指定的规则，这个比较好理解，也是较常见的匹配方式。
+* 长度优先匹配 一般用在静态路由上（不支持动态元素如正则和 URL 路径参数），优先匹配字符数较多的规则。
+* 使用 长度优先匹配 规则的 http.ServeMux 会把除了 /about 这个匹配的以外的所有 URI 都使用 defaultHandler 来处理。
+* 而使用 精准匹配 的 gorilla/mux 会把以上两个规则精准匹配到两个链接，/ 为首页，/about 为关于，除此之外都是 404 未找到
+* 一般 长度优先匹配 规则用在静态内容处理上比较合适，动态内容，例如我们的 goblog 这种动态网站，使用 精准匹配 会比较方便。
+
 ## 
