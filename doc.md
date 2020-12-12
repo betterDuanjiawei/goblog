@@ -37,4 +37,27 @@ strings	字符串转换、解析及实用函数
 time	时间接口
 text	文本模板及 Token 词法器
 
-##
+## go 编译型语言
+ * Go 语言为编译型语言，编译型语言有诸多好处，如：
+    1. 部署简单
+    2. 提早发现错误
+    3, 执行效率高
+然而这也意味着代码修改后需重新编译才能看到变更，这为我们本地开发带来了诸多不便。
+
+## 自动重载方案
+* air [安装](https://learnku.com/courses/go-basic/1.15/automatic-overloading/8944)
+```
+go env -w  GOPROXY=https://goproxy.cn
+GO111MODULE=on  go get -u github.com/cosmtrek/air
+air -v
+air //启动
+go: cannot find main module, but found .git/config in /Users/v_duanjiawei/go/src/github.com/betterDuanjiawei/goblog
+        to create a module there, run:
+        go mod init
+failed to build, error: exit status 1
+
+运行 go mod init
+再运行 air
+```
+* [关于mac安装air后无法找到air命令](https://learnku.com/go/t/51906)
+* 请确保 air 命令行时刻处于运行状态
