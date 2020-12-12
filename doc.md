@@ -61,3 +61,18 @@ failed to build, error: exit status 1
 ```
 * [关于mac安装air后无法找到air命令](https://learnku.com/go/t/51906)
 * 请确保 air 命令行时刻处于运行状态
+
+## Content-Type 标头
+Content-Type: 响应标头是告知客户端内容的类型，客户端再根据这个信息将内容正确地呈现给用户。
+
+常见的内容类型有：
+
+text/html —— HTML 文档
+text/plain —— 文本内容
+text/css—— CSS 样式文件
+text/javascript —— JS 脚本文件
+application/json—— JSON 格式的数据
+application/xml —— XML 格式的数据
+image/png —— PNG 图片
+
+## 
