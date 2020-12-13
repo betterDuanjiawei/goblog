@@ -429,6 +429,29 @@ type Result interface {
 ```
 stmt, err = db.Prepare("INSERT INTO articles (title, body) VALUES(?,?)")
 ```
+* stmt.Exec()
+Prepare 只会生产 stmt ，真正执行请求的需要调用 stmt.Exec()：
+* QueryRow() 一般情况下，我们使用 QueryRow() 来读取单条数据。
+```
+它的参数可以为一个或者多个。参数只有一个的情况下，我们称之为纯文本模式，多个参数的情况下称之为 Prepare 模式。
+之所以称之为 Prepare 模式是因为当多个参数的情况下，QueryRow() 封装了 Prepare 方法的调用，
+err := db.QueryRow(query, id).Scan(&article.ID, &article.Title, &article.Body)
+
+stmt, err := db.Prepare(query)
+checkError(err)
+defer stmt.Close()
+err = stmt.QueryRow(id).Scan(&article.ID, &article.Title, &article.Body)
+```
+* Scan() 方法
+```
+err := db.QueryRow(query, id).Scan(&article.ID, &article.Title, &article.Body)
+
+Scan() 将查询结果赋值到我们的 article struct 中，传参应与数据表字段的顺序保持一致。
+需要注意的是，返回的 sql.Row 是个指针变量，保存有 SQL 连接。当调用 Scan() 时，就会将连接释放。所以在每次 QueryRow 后使用 Scan 是必须的。
+我们极力推荐这种链式调用的方式，养成好习惯以避免掉进 SQL 连接不够用的坑。
+```
+* sql.ErrNoRows 未找到数据
+
 
 
 
