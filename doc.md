@@ -468,10 +468,13 @@ Query () 与 Rows 时需要注意的点
 使用 rows.Next() 遍历数据，遍历到最后内部遇到 EOF 错误，会自动调用 rows.Close() 将 SQL 连接关闭；
 使用 rows.Next() 遍历时，如遇错误，SQL 连接也会自动关闭；
 rows.Close() 可调用多次，使用 rows.Close() 可保证 SQL 连接永远是关闭的。
-defer rows.Close() 需在检测 err 以后调用，否则会让运行时 panic ；
+defer rows.Close() 需在检测 err 以后调用，否则会让运行时 panic ；因为如果有 err的话,row.Close 会调用失败
 牢记在获取到结果集后，必须执行 defer rows.Close()。这样做能防止有时你在函数里过早 return ，或者其他操作忘记关闭资源，这是一个值得培养的良好习惯；
 如果你在循环中执行 Query() 并获取 Rows 结果集，请不要使用 defer ，而是直接调用 rows.Close()，因为 defer 不会立刻执行，而是在函数执行结束后执行
 ```
+
+* 这里我们用的是 Exec()，一般在 CREATE/UPDATE/DELETE 时使用。这里使用的是纯文本模式的查询模式，因为 ID 我们是从数据库里拿出来的，是自增 ID ，无需担心 SQL 注入，这样可以少发送一次 SQL 请求。
+`rs, err := db.Exec("DELETE FROM articles WHERE id = " + strconv.FormatInt(a.ID, 10))`
 
 * Go 模板里调用函数语法如下：
 ```
