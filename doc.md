@@ -451,6 +451,18 @@ Scan() 将查询结果赋值到我们的 article struct 中，传参应与数据
 我们极力推荐这种链式调用的方式，养成好习惯以避免掉进 SQL 连接不够用的坑。
 ```
 * sql.ErrNoRows 未找到数据
+* Exec () 方法
+```
+执行数据更新的是 Exec() 方法，此方法与我们之前学习 Prepare 方法时搭配使用 stmt.Exec() 不一样，stmt.Exec() 是 sql.Stmt 的方法，而这里的 Exec() 是 sql.DB 提供的方法。
+一般情况下，我们使用此方法来处理 CREATE、UPDATE、DELETE 类型的 SQL。
+与 createTables() 方法中使用的 Exec() 一致：
+你应该知道了，他们传参的数量不一致。
+Exec() 的用法与 QueryRow() 类似，支持单独参数的纯文本模式 与 多个参数的 Prepare 模式，语法如下；
+func (db *DB) Exec(query string, args ...interface{}) (Result, error) 
+```
+* 善用 Exec() 的 Prepare 模式 来防范 SQL 注入攻击。
+
+
 
 
 
