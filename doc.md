@@ -425,9 +425,31 @@ type Result interface {
 我们可以用 sql.Result 中的 LastInsertId() 方法或 RowsAffected() 来判断 SQL 语句是否执行成功。
 因为我们执行的是 CREATE TABLE IF NOT EXISTS 语句，会被重复执行，所以这里判断返回结果意义不大，主要判断返回的第二个参数 err 是否有问题。
 ```
+* 在数据库安全方面，Prepare 语句是防范 SQL 注入攻击有效且必备的手段。
+```
+stmt, err = db.Prepare("INSERT INTO articles (title, body) VALUES(?,?)")
+```
+
 
 
 ## 数据库设置
 * `CREATE DATABASE goblog CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`
 * 编码使用 utf8mb4_unicode_ci 是为了支持存储 Emoji，这在现代化的应用中是必要的。另外支持大小写不敏感（ci 是 Case Insensitive 的缩写）。
+
+
+## strconv.FormatInt()
+* strconv.FormatInt(lastInsertID, 10)
+这里我们使用到了 FormatInt() 方法来将类型为 int64 的 lastInsertID 转换为字符串。此方法的第二个参数 10 为十进制
+
+## 多变量声明方式
+```
+多变量声明的方式与引入多个包使用 import(...) 同出一辙，都是 Go 语言为了让开发者少写代码而提供的简写方式。
+// 变量初始化
+var (
+    id   int64
+    err  error
+    rs   sql.Result
+    stmt *sql.Stmt
+)
+```
 
