@@ -461,9 +461,26 @@ Exec() 的用法与 QueryRow() 类似，支持单独参数的纯文本模式 与
 func (db *DB) Exec(query string, args ...interface{}) (Result, error) 
 ```
 * 善用 Exec() 的 Prepare 模式 来防范 SQL 注入攻击。
+* 
+```
+Query () 与 Rows 时需要注意的点
+在每一次 for rows.Next() 后，都记得要检测下是否有错误发生，调用 rows.Err() 可获取到错误；
+使用 rows.Next() 遍历数据，遍历到最后内部遇到 EOF 错误，会自动调用 rows.Close() 将 SQL 连接关闭；
+使用 rows.Next() 遍历时，如遇错误，SQL 连接也会自动关闭；
+rows.Close() 可调用多次，使用 rows.Close() 可保证 SQL 连接永远是关闭的。
+defer rows.Close() 需在检测 err 以后调用，否则会让运行时 panic ；
+牢记在获取到结果集后，必须执行 defer rows.Close()。这样做能防止有时你在函数里过早 return ，或者其他操作忘记关闭资源，这是一个值得培养的良好习惯；
+如果你在循环中执行 Query() 并获取 Rows 结果集，请不要使用 defer ，而是直接调用 rows.Close()，因为 defer 不会立刻执行，而是在函数执行结束后执行
+```
 
-
-
+* Go 模板里调用函数语法如下：
+```
+{{ Function arg... }}
+这里我们调用 Article 的 Link() 方法：
+{{ $article.Link }}
+假如参数的话，就是：
+{{ $article.Link  参数1 参数2 }}
+```
 
 
 

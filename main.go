@@ -159,6 +159,16 @@ type Article struct {
 	ID          int64
 }
 
+// Link 方法用来生成文章链接
+func (a Article) Link() string {
+	showURL, err := router.Get("articles.show").URL("id", strconv.FormatInt(a.ID, 10))
+	if err != nil {
+		checkError(err)
+		return ""
+	}
+	return showURL.String()
+}
+
 func articlesShowHandler(w http.ResponseWriter, r *http.Request) {
 	// 1. 获取 URL 参数
 	id := getRouteVariable("id", r)
@@ -186,7 +196,32 @@ func articlesShowHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func articlesIndexHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "访问文章列表")
+	// 1. 执行查询语句，返回一个结果集
+	rows, err := db.Query("SELECT * from articles")
+	checkError(err)
+	defer rows.Close()
+
+	var articles []Article
+	//2. 循环读取结果
+	for rows.Next() {
+		var article Article
+		// 2.1 扫码每一行的结果并赋值到一个 article 对象中
+		err := rows.Scan(&article.ID, &article.Title, &article.Body)
+		checkError(err)
+		// 2.2 将 article 追加到 articles 的这个数组中
+		articles = append(articles, article)
+	}
+
+	// 2.3 检测遍历时是否发生错误
+	err = rows.Err()
+	checkError(err)
+
+	// 3. 加载模板
+	tmpl, err := template.ParseFiles("resources/views/articles/index.gohtml")
+	checkError(err)
+
+	// 4. 渲染模板，将所有文章的数据传输进去
+	tmpl.Execute(w, articles)
 }
 
 func articlesStoreHandler(w http.ResponseWriter, r *http.Request) {
@@ -197,11 +232,11 @@ func articlesStoreHandler(w http.ResponseWriter, r *http.Request) {
 	// }
 
 	// title := r.PostForm.Get("title")
-	 // 4.1 表单验证
-	 title := r.PostFormValue("title")
-	 body := r.PostFormValue("body")
+	// 4.1 表单验证
+	title := r.PostFormValue("title")
+	body := r.PostFormValue("body")
 
-	 errors := validateArticleFormData(title, body)
+	errors := validateArticleFormData(title, body)
 
 	if len(errors) == 0 {
 		lastInsertID, err := saveArticleToDB(title, body)
@@ -359,22 +394,21 @@ func articlesUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-
 func validateArticleFormData(title string, body string) map[string]string {
-    errors := make(map[string]string)
-    // 验证标题
-    if title == "" {
-        errors["title"] = "标题不能为空"
-    } else if utf8.RuneCountInString(title) < 3 || utf8.RuneCountInString(title) > 40 {
-        errors["title"] = "标题长度需介于 3-40"
-    }
+	errors := make(map[string]string)
+	// 验证标题
+	if title == "" {
+		errors["title"] = "标题不能为空"
+	} else if utf8.RuneCountInString(title) < 3 || utf8.RuneCountInString(title) > 40 {
+		errors["title"] = "标题长度需介于 3-40"
+	}
 
-    // 验证内容
-    if body == "" {
-        errors["body"] = "内容不能为空"
-    } else if utf8.RuneCountInString(body) < 10 {
-        errors["body"] = "内容长度需大于或等于 10 个字节"
-    }
+	// 验证内容
+	if body == "" {
+		errors["body"] = "内容不能为空"
+	} else if utf8.RuneCountInString(body) < 10 {
+		errors["body"] = "内容长度需大于或等于 10 个字节"
+	}
 
-    return errors
+	return errors
 }
