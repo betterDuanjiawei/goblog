@@ -134,4 +134,119 @@ go get -u github.com/gorilla/mux
 * 而使用 精准匹配 的 gorilla/mux 会把以上两个规则精准匹配到两个链接，/ 为首页，/about 为关于，除此之外都是 404 未找到
 * 一般 长度优先匹配 规则用在静态内容处理上比较合适，动态内容，例如我们的 goblog 这种动态网站，使用 精准匹配 会比较方便。
 
-## 
+## gorilla/mux 使用指南
+* 指定 Methods () 来区分请求方法;在 Gorilla Mux 中，如未指定请求方法，默认会匹配所有方法。
+* 请求路径参数和正则匹配 
+```
+router.HandleFunc("/articles/{id:[0-9]+}", articlesShowHandler).Methods("GET").Name("articles.show")
+{id:[0-9]+}
+使用 {name} 花括号来设置路径参数
+在有正则匹配的情况下，使用 : 区分。第一部分是名称，第二部分是正则表达式
+限定了 一个或者多个的数字。如果你访问非数字的 ID ，如 localhost:3000/articles/string 即会看到 404 页面。
+
+func articlesShowHandler(w http.ResponseWriter, r *http.Request) {
+    vars := mux.Vars(r)
+    id := vars["id"]
+    fmt.Fprint(w, "文章 ID："+id)
+}
+
+Mux 提供的方法 mux.Vars(r) 会将 URL 路径参数解析为键值对应的 Map，使用以下方法即可读取：
+vars["id"]
+```
+* 命名路由与链接生成
+Name() 方法用来给路由命名，传参是路由的名称，接下来我们就可以靠这个名称来获取到 URI：
+```
+router.HandleFunc("/", homeHandler).Methods("GET").Name("home")
+router.HandleFunc("/articles/{id:[0-9]+}", articlesShowHandler).Methods("GET").Name("articles.show")
+```
+## go module 
+[学习](https://learnku.com/courses/go-basic/1.15/dependency-management-go-module/9279)
+### 使用原因
+* Go Modules 是 Go 语言的代码依赖管理工具。类似于 PHP 中的 Composer、Node.js 中的 npm 。
+* Go Modules 由官方维护。自 Go 版本 1.14 开始，官方鼓励所有用户迁移到 Go Modules 以进行依赖项管理。
+* 弃用 $GOPATH
+Go Modules 出现的目的之一就是为了解决 GOPATH 的问题。
+在 $GOPATH 时代，Go 源码必须放置于 $GOPATH/src 下，抛弃 $GOPATH 的好处，是你能在任意地方创建的 Go 项目。
+另外，$GOPATH 有非常落后的依赖管理系统。因在执行 go get 时，无法传达任何版本信息。
+在构建 Go 应用程序上，我们无法保证其它人与你所期望依赖的第三方库是相同的版本（相同的代码），也就是说无法保证所有人的依赖版本都一致。
+### go module 日常使用
+* go mod init 初始化 生成 go.mod
+* go env -w GOPROXY=https://goproxy.cn 使用 go env -w 来修改 go 相关的环境变量
+* go get github.com/julienschmidt/httprouter 安装 httprouter
+* 每一次的 go get 都会同时修改 go.mod 和 go.sum 文件。
+这两个文件是下载依赖包的主要依据。go.mod 类似于 PHP 中的 composer.json ，而 go.sum 则是 composer.lock。
+* 几个参数：
+        1. module —— 我们的 goblog 在 Go Module 里也算是一个 Module ；
+        2. go —— 指定了版本要求，最低 1.15
+        3. require —— 是项目所需依赖
+* go.sum 文件保存着依赖包的版本和哈希值
+* 需要注意的是，go.sum 里不止会保存直接依赖包的哈希值，间接依赖包的哈希值也会被保存。
+* go get github.com/gin-gonic/gin
+* 每个模块路径有如下两种哈希：
+```
+github.com/gorilla/mux v1.7.4 h1:VuZ8uybHlWmqV03+zRzdwKL4tUnIp1MAQtp1mIFE1bc=
+github.com/gorilla/mux v1.7.4/go.mod h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB71So=
+```
+前者为 Go Modules 打包整个模块包文件 zip 后再进行 hash 值，而后者为针对 go.mod 的 hash 值。
+由此可见，go.sum 是保证所下载源码 100% 正确的重要依据。如果有恶意用户，将某个 Git 项目的 tag 源码做了修改，这些哈希值将会不匹配并报错。
+因为 go.sum 有 100% 保证 build 一致的作用，我们建议开发中将其加入到代码版本控制器中。这里面不止有安全的因素，当同事或者其他人 clone 你的代码，我们也希望代码可以保持一致。
+* 注释 indirect 此标志标明这个依赖包还未被使用，如果你在代码的某个地方 import 到的话，VSCode 的 Go 插件就会自动将这个标志去除
+* go mod tidy 此命令做整理依赖使用,执行时候会把未使用的 module移除掉
+* go clean -modcache 清空本地下载的 go modules 缓存
+* 下载依赖,默认情况下 go run 和 go build命令执行的时候,go 会基于go.mod自动拉取依赖,主动拉取依赖:go mod download
+* go modules 命令
+```
+go mod init     生成go.mod 和 go.sum 文件
+go mod download 下载 go.mod 中指明的所有依赖
+go mod tidy     整理现有依赖
+go mod graph    查看现有依赖结构
+go mod edite    编辑 go.mod 文件
+go mod vendor   导出项目所有依赖到 vendor目录
+go mod verify   校验一个模块是否被篡改过
+go mod why      查看为什么要依赖某模块
+```
+### 相关环境变量
+
+* GO111MODULE 因是在 Go1.11 版本添加，故命名为 GO111MODULE。
+```
+auto：项目包含了 go.mod 文件的话启用 Go modules，目前在 Go1.11 至 Go1.15 中仍然是默认值。
+on：启用 Go modules，推荐设置，将会是未来版本中的默认值。
+off：禁用 Go modules，不推荐设置。
+```
+* GOPROXY 此变量用于设置 Go 模块代理（Go module proxy),其作用是拉取源码时能够脱离传统的 VCS 方式，直接通过镜像站点来快速拉取。将其设置为 off ，将会禁止 Go 在后续操作中使用任何 Go 模块代理。 * * * GOPROXY 的值是一个以英文逗号 , 分割的 Go 模块代理列表，可设置多个模块代理。
+* direct 标志,意味着从源地址抓取,https://goproxy.cn,direct:则告诉 go get 在获取源码包时先尝试 https://goproxy.cn，如果遇到 404 等错误时，再尝试从源地址抓取。
+
+* GOSUMDB 此值是 Go Checksum Database 的缩写，用于在拉取模块版本时（无论是从源站拉取还是通过 Go Module Proxy 拉取）保证拉取到的模块代码包未经过篡改，若发现不一致将会立即中止。
+* GOSUMDB="sum.golang.org" 默认值;在国内同样无法访问，所幸 GOSUMDB 可以被 Go Module Proxy 代理。我们所设置的模块代理 goproxy.cn 支持代理 sum.golang.org。另外，此变量还可设置为 off，会禁止 Go 在后续操作中校验模块哈希。
+
+*  GONOPROXY/GONOSUMDB/GOPRIVATE
+```
+这三个环境变量都是用在依赖了私有模块，这些模块 GOPROXY 和 GOSUMDB 都无法读取。
+GONOPROXY —— 设置不走 Go Proxy 的 URL 规则；
+GONOSUMDB —— 设置不检查哈希的 URL 规则；
+GOPRIVATE —— 设置私有模块的 URL 规则，会同时设置以上两个变量。
+因为 GOPRIVATE 会同时设定以上两个，所以一般私有仓库使用 GOPRIVATE 即可。
+以上三个值，都可使用逗号分隔来设置多个选项。
+go env -w GOPRIVATE="git.example.com,github.com/name/project"
+设置后当 go get 时，前缀为 git.example.com 和 github.com/name/project 的模块都会被认为是私有模块。
+利用通配符
+go env -w GOPRIVATE="*.example.com"
+这样子设置的话，所有模块路径为 example.com 的子域名（例如：git.example.com）都将不经过 Go module proxy 和 Go checksum database，需要注意的是不包括 example.com 本身。
+```
+
+## 中间件
+* Gorilla Mux 的 mux.Use() 方法来加载中间件
+```
+// 中间件:强制内容类型为 html
+router.Use(forceHTMLMiddleware)
+
+func forceHTMLMiddleware(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// 设置标头
+		w.Header().Set("Content-type", "text/html;charset=utf-8")
+		// 继续处理请求
+		h.ServeHTTP(w, r)
+	})
+}
+```
+
