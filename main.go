@@ -3,12 +3,13 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/mux"
 )
 
 func main() {
-	router := mux.NewRouter()
+	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/", homeHandler).Methods("GET").Name("home")
 	router.HandleFunc("/about", aboutHandler).Methods("GET").Name("about")
 
@@ -26,7 +27,18 @@ func main() {
 	articleURL, _ := router.Get("articles.show").URL("id", "23")
 	fmt.Println("articleURL", articleURL)
 
-	http.ListenAndServe(":3000", router)
+	http.ListenAndServe(":3000", removeTrailingSlash(router))
+}
+
+func removeTrailingSlash(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// 除了首页的/外,其他页面的都会去去除
+		if r.URL.Path != "/" {
+			r.URL.Path = strings.TrimSuffix(r.URL.Path, "/")
+		}
+		// 传递请求
+		next.ServeHTTP(w, r)
+	})
 }
 
 func forceHTMLMiddleware(h http.Handler) http.Handler {
