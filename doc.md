@@ -283,3 +283,84 @@ r.Form 比 r.PostForm 多了 URL 参数里的数据。
 ## 错误处理
 * 在 Go 中，一般 err 处理方式可以是给用户提示或记录到错误日志里，这种很多时候为 业务逻辑错误。当有重大错误，或者系统错误时，例如无法加载模板文件，就使用 panic() 。
  
+## template包的使用
+* 解析 html 变量
+```
+tmpl, err := template.New("create-form").Parse(html)
+tmpl.Execute(w, data)
+```
+* 解析文件
+```
+tmpl, err := template.ParseFiles("resources/views/articles/create.gohtml")
+if err != nil {
+        panic(err)
+}
+tmpl.Execute(w, data)
+```
+
+## html/template 语法
+* 发生错误时，也就是 errors 的长度大于零时，我们会把 errors 传参到 HTML 中进行渲染。Go 标准库的 html/template，就是专门为这种场景所设计的
+* 双层大括号 {{ }} 是默认的模板界定符。用于在 HTML 模板文件中界定模板语法。模板语法都包含在 {{和}} 中间。
+* {{.}} 语句 {{ . }} 中的点表示当前对象。当我们传入一个结构体对象时，我们可以使用 . 来访问结构体的对应字段。同理，当我们传入的变量是 map 时，也可以在模板文件中通过 . 根据 key 来取值。
+* with 关键字
+```
+{{ with pipeline }} T1 {{ end }}
+如果 pipeline 为空则不产生输出，否则将 . 设为 pipeline 的值并执行 T1。不修改外面的 .
+{{ with pipeline }} T1 {{ else }} T0 {{ end }}
+如果 pipeline 为空则不改变 . 并执行 T0，否则 . 设为 pipeline 的值并执行 T1。
+with 区块外，{{ . }} 代表传入模板的数据，而在 with 区块内，则代表 pipline 里的数据。
+如 {{ with .Errors.title }} 这个区块内，{{ . }} 代表 .Errors.title。
+
+pipeline
+pipeline 是指产生数据的操作。比如 {{ . }}、{{ .Name }} 等。Go 的模板语法支持使用管道符号 | 连接多个命令，用法和 Unix 下的管道类似 —— | 前面的命令会将运算结果 (或返回值) 传递给后一个命令的最后一个位置。
+注意： 并不是只有使用了 | 才是 pipeline。Go 的模板中，pipeline 的概念是传递数据，只要能产生数据的，都是 pipeline。
+```
+* 注释  注释，执行时会忽略。可以多行。注释不能嵌套，且须紧贴分界符。`{{/* 这是一个注释 */}}`
+* 变量  我们还可以在模板中声明变量，用来保存传入模板的数据或其他语句生成的结果。具体语法如下： `$variable := {{ . }}`;其中 $variable 是变量的名字，在后续的代码中就可以使用该变量了。
+* 移除空格 有时会不可避免的引入空格或者换行符，导致模板最终渲染结果不符预期。这种情况可以使用 {{- 语法去除模板内容左侧的所有空白符号， 使用 -}} 去除模板内容右侧的所有空白符号。
+```
+例如：
+{{- .Name -}}
+注意： - 要紧挨 {{和}}，同时与模板值之间需要使用空格分隔。
+```
+* 条件判断 
+```
+{{if pipeline}} T1 {{end}}
+{{if pipeline}} T1 {{else}} T0 {{end}}
+{{if pipeline}} T1 {{else if pipeline}} T0 {{end}}
+```
+* range 遍历
+```
+range 关键字用以在模板里遍历数据，有以下两种写法，其中 pipeline 的值必须是数组、切片、字典或者通道。
+{{range pipeline}} T1 {{end}}
+如果 pipeline 的值其长度为 0，不会有任何输出
+
+{{range pipeline}} T1 {{else}} T0 {{end}}
+如果 pipeline 的值其长度为 0，则会执行 T0。
+```
+* 修改默认的标识符
+```
+Go 标准库的模板引擎使用的花括号 {{和}} 作为标识，而许多前端框架（如 Vue 和 AngularJS）也使用 {{和}} 作为标识符，所以当我们同时使用 Go 语言模板引擎和以上前端框架时就会出现冲突，这个时候我们需要修改标识符，修改前端的或者修改 Go 语言的。这里演示如何修改 Go 语言模板引擎默认的标识符：
+template.New("test").Delims("{[", "]}").ParseFiles("filename.gohtml")
+```
+
+## MySQL 驱动
+* 一是利用 database/sql 接口，直接在代码里硬编码 sql 语句；
+* 二是使用 ORM，具体一点是 GORM，以对象关系映射的方式在抽象地操作数据库。
+
+### 安装驱动
+* go get github.com/go-sql-dirver/mysql
+* 注意导入 mysql 驱动时，在包路径前我们添加 _，这里使用了匿名导入的方式来加载驱动
+```
+ _ "github.com/go-sql-driver/mysql"
+```
+* 为什么需要匿名导入？
+```
+因为引入的是驱动，操作数据库时我们使用的是 sql 库里的方法，而不会具体使用到 go-sql-driver/mysql 包里的方法，当有未使用的包被引入时，Go 编译器会停止编译。为了让编译器能正常运行，需要使用 匿名导入 来加载。
+
+当导入了一个数据库驱动后，此驱动会自行初始化（利用 init() 函数）并注册自己到 Golang 的 database/sql 上下文中，驱动里的 init() 代码如下：
+func init() {
+    sql.Register("mysql", &MySQLDriver{})
+}
+```
+* 
