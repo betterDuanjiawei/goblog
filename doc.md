@@ -411,3 +411,23 @@ show variables like 'max_connections';
 这里的推荐，比较保守的做法是设置五分钟：
 ```
 
+### 常用
+* Exec 方法 `_, err := db.Exec(createArticlesSQL)`
+```
+我们使用 Exec() 来执行创建数据库表结构的语句。
+一般使用 sql.DB 中的 Exec() 来执行没有返回结果集的 SQL 语句。例如 INSERT, UPDATE, DELETE 等语句。语法如下：
+func (db *DB) Exec(query string, args ...interface{}) (Result, error)
+Exec() 方法的第一个返回值为一个实现了 sql.Result 接口的类型，sql.Result 的定义如下：
+type Result interface {
+    LastInsertId() (int64, error)    // 使用 INSERT 向数据插入记录，数据表有自增 id 时，该函数有返回值
+    RowsAffected() (int64, error)    // 表示影响的数据表行数
+}
+我们可以用 sql.Result 中的 LastInsertId() 方法或 RowsAffected() 来判断 SQL 语句是否执行成功。
+因为我们执行的是 CREATE TABLE IF NOT EXISTS 语句，会被重复执行，所以这里判断返回结果意义不大，主要判断返回的第二个参数 err 是否有问题。
+```
+
+
+## 数据库设置
+* `CREATE DATABASE goblog CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`
+* 编码使用 utf8mb4_unicode_ci 是为了支持存储 Emoji，这在现代化的应用中是必要的。另外支持大小写不敏感（ci 是 Case Insensitive 的缩写）。
+
