@@ -250,3 +250,17 @@ func forceHTMLMiddleware(h http.Handler) http.Handler {
 }
 ```
 
+## 301
+* 当请求方式为 POST 的时候，遇到服务端的 301 跳转，将会变成 GET 方式。很明显，这并非所愿，我们需要一个更好的方案。
+
+## strins.TrimSuffix()
+*  strings 包提供的 TrimSuffix(s, suffix string) string 函数来移除 / 后缀，如果不带斜杆后缀的话，r.URL.Path 将会被原封不动地返回
+
+## 变量作用域
+* 函数和函数直接的变量是不可见的
+* 如果两个函数要同时用一个变量,那么可以用包级别的变量来解决
+* router := mux.NewRouter() // syntax error: non-declaration statement outside function body    语法错误：函数外无法使用变量赋值语句
+原因是包级别的变量声明时不能使用 := 语法，修改为带关键词 var 的变量声明即可：
+改正: var router = mux.NewRouter()
+
+ 
