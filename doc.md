@@ -263,4 +263,15 @@ func forceHTMLMiddleware(h http.Handler) http.Handler {
 原因是包级别的变量声明时不能使用 := 语法，修改为带关键词 var 的变量声明即可：
 改正: var router = mux.NewRouter()
 
+## ParseForm PostForm Form FormValue() PostFormValue
+* r.ParseForm() 由 http 包提供，从请求中解析请求参数，必须是执行完这段代码，后面 r.PostForm 和 r.Form 才能读取到数据，否则为空数组。
+```
+err := r.ParseForm()
+r.PostForm.Get("title")
+r.PostForm 存储了 post put 参数,在使用之前要调用 ParseForm()解析
+r.Form Form 存储了 post put get参数,在使用之前用调用 ParseForm()解析
+r.Form 比 r.PostForm 多了 URL 参数里的数据。
+// 如果不想全部获取的话,而是逐个获取,可以不用 ParseForm(),直接使用r.FormValue()和r.PostFormValue()方法
+```
+
  
