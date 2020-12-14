@@ -589,3 +589,8 @@ method (*T) Parallel()
 // 可用于执行子测试
 method (*T) Run(name string, f func(t *T)) bool
 ```
+
+## Go 会缓存测试的结果。
+* go test 命令添加 -count=1 的参数
+* Go 为了提高测试的性能，会对包的编译后的测试代码进行缓存。一般常见的，也是官方推荐的清除缓存的方式是使用 -count 参数。此参数一般用以设置测试运行的次数，如果设置为 2 的话就会运行测试两次。
+* go test ./tests -v -count=1
