@@ -544,3 +544,48 @@ func NotSubset(t TestingT, list, subset interface{}, msgAndArgs ...interface{}) 
 func FileExists(t TestingT, path string, msgAndArgs ...interface{}) bool
 func DirExists(t TestingT, path string, msgAndArgs ...interface{}) bool
 ```
+
+## 表组测试
+* Go 语言中，对于具备相同的测试逻辑的场景，我们可以使用简洁紧凑的 表组测试（Table-Driven Test） 来编写测试，标准库中的测试也广泛使用此种方式。
+* 我们要定义一个用于表组测试的结构体，其中要包含测试所需的输入与期望的输出。
+
+## t.Logf
+* t.Logf("当前请求 URL: %v \n", test.url)
+* 当我们执行 go test 时，除了失败，是不会打印出来信息的，只有当我们设置了 -v 参数以后，才会显示： -v 是详细打印的意思，会打印出调用的测试函数以及终端的输出。
+
+## *testing.T
+* testing.T 中可导出方法如下：
+```
+// 获取测试名称
+method (*T) Name() string
+// 打印日志
+method (*T) Log(args ...interface{})
+// 打印日志，支持 Printf 格式化打印
+method (*T) Logf(format string, args ...interface{})
+// 反馈测试失败，但不退出测试，继续执行
+method (*T) Fail()
+// 反馈测试失败，立刻退出测试
+method (*T) FailNow()
+// 反馈测试失败，打印错误
+method (*T) Error(args ...interface{})
+// 反馈测试失败，打印错误，支持 Printf 的格式化规则
+method (*T) Errorf(format string, args ...interface{})
+// 检测是否已经发生过错误
+method (*T) Failed() bool
+// 相当于 Error + FailNow，表示这是非常严重的错误，打印信息结束需立刻退出。
+method (*T) Fatal(args ...interface{})
+// 相当于 Errorf + FailNow，与 Fatal 类似，区别在于支持 Printf 格式化打印信息；
+method (*T) Fatalf(format string, args ...interface{})
+// 跳出测试，从调用 SkipNow 退出，如果之前有错误依然提示测试报错
+method (*T) SkipNow()
+// 相当于 Log 和 SkipNow 的组合
+method (*T) Skip(args ...interface{})
+// 与Skip，相当于 Logf 和 SkipNow 的组合，区别在于支持 Printf 格式化打印
+method (*T) Skipf(format string, args ...interface{})
+// 用于标记调用函数为 helper 函数，打印文件信息或日志，不会追溯该函数。
+method (*T) Helper()
+// 标记测试函数可并行执行，这个并行执行仅仅指的是与其他测试函数并行，相同测试不会并行。
+method (*T) Parallel()
+// 可用于执行子测试
+method (*T) Run(name string, f func(t *T)) bool
+```
