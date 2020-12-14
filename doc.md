@@ -484,6 +484,10 @@ defer rows.Close() 需在检测 err 以后调用，否则会让运行时 panic �
 假如参数的话，就是：
 {{ $article.Link  参数1 参数2 }}
 ```
+* 首先这是模板注释，请注意 {{/* 之间没有空格，同理注释关闭符：
+{{/* 构建删除按钮  */}}
+
+[sql总结](https://learnku.com/courses/go-basic/1.15/database-knowledge-summary/9492)
 
 
 
@@ -508,3 +512,35 @@ var (
 )
 ```
 
+## stretchr/testify
+* go get github.com/stretchr/testify
+* 以下是 testify 的常用断言函数：
+```
+// 相等
+func Equal(t TestingT, expected, actual interface{}, msgAndArgs ...interface{}) bool
+func NotEqual(t TestingT, expected, actual interface{}, msgAndArgs ...interface{}) bool
+// 是否为 nil
+func Nil(t TestingT, object interface{}, msgAndArgs ...interface{}) bool
+func NotNil(t TestingT, object interface{}, msgAndArgs ...interface{}) bool
+// 是否为空
+func Empty(t TestingT, object interface{}, msgAndArgs ...interface{}) bool
+func NotEmpty(t TestingT, object interface{}, msgAndArgs ...interface{}) bool
+// 是否存在错误
+func NoError(t TestingT, err error, msgAndArgs ...interface{}) bool
+func Error(t TestingT, err error, msgAndArgs ...interface{}) bool
+// 是否为 0 值
+func Zero(t TestingT, i interface{}, msgAndArgs ...interface{}) bool
+func NotZero(t TestingT, i interface{}, msgAndArgs ...interface{}) bool
+// 是否为布尔值
+func True(t TestingT, value bool, msgAndArgs ...interface{}) bool
+func False(t TestingT, value bool, msgAndArgs ...interface{}) bool
+// 断言长度一致
+func Len(t TestingT, object interface{}, length int, msgAndArgs ...interface{}) bool
+// 断言包含、子集、非子集
+func NotContains(t TestingT, s, contains interface{}, msgAndArgs ...interface{}) bool
+func Subset(t TestingT, list, subset interface{}, msgAndArgs ...interface{}) (ok bool)
+func NotSubset(t TestingT, list, subset interface{}, msgAndArgs ...interface{}) (ok bool)
+// 断言文件和目录存在
+func FileExists(t TestingT, path string, msgAndArgs ...interface{}) bool
+func DirExists(t TestingT, path string, msgAndArgs ...interface{}) bool
+```
